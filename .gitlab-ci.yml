@@ -5,3 +5,5 @@ run_test:
   stage: test
   script:
     - make test
+    - export PORT=5004
+    - make run
