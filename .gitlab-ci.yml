@@ -9,8 +9,6 @@ variables:
   IMAGE_NAME: "eshkt/yaml-docker-hub"
   IMAGE_TAG: "first-container"
   APP_NAME: "yaml-docker-hub"
-  EC2_HOST: "13.216.232.127"  # Hardcode the IP address here TEMPORARY
-  EC2_USER: "ec2-user"        # Hardcode the username here TEMPORARY
 
 run_test:
   before_script:
@@ -64,12 +62,12 @@ deploy_to_ec2:
           sudo systemctl enable docker
           sudo user mod -a -G docker $EC2_USER
           echo "Docker installed successfully."
-        fi
+        fi 
 
         #2 Re-login to apply docker group permissions 
         sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
         sudo docker pull $IMAGE_NAME:$IMAGE_TAG
         sudo docker stop $APP_NAME || true
         sudo docker rm $APP_NAME || true
-        sudo docker run -d --name $APP_NAME -p 443:5000 $IMAGE_NAME:$IMAGE_TAG
+        sudo docker run -d --name $APP_NAME -p 80:5000 $IMAGE_NAME:$IMAGE_TAG
         "
