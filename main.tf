@@ -21,11 +21,12 @@ resource "aws_internet_gateway" "app_gtw" {
 #3. Custome route table
 resource "aws_route_table" "app_rt_tbl" {
     vpc_id = aws_vpc.app_vpc.id
+
     route {
         cidr_block = "192.168.0.0/16"
         gateway_id = aws_internet_gateway.app_gtw.id
     }
-    route = {
+    route {
         ipv6_cidr_block = "::/0"
         gateway_id = aws_internet_gateway.app_gtw.id
     }
@@ -38,7 +39,7 @@ resource "aws_route_table" "app_rt_tbl" {
 resource "aws_subnet" "py_app_sn" {
     vpc_id = aws_vpc.app_vpc.id
     cidr_block = "192.168.1.0/24"
-    availability_zone = us-east-1b
+    availability_zone = "us-east-1b"
     tags = {
         Name = "python-app-subnet"
     }
@@ -111,7 +112,7 @@ resource "aws_eip" "py_app_eip" {
 resource "aws_instance" "py_app_ec2" {
     ami = "ami-0c1fe732b5494dc14"
     instance_type = "t3.micro"
-    availability_zone = us-east-1b
+    availability_zone = "us-east-1b"
     key_name = "python-app-key"
 
     network_interface {
