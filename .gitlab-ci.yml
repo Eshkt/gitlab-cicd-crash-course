@@ -1,9 +1,25 @@
+stages:
+  - test
+  - dockerize
+
+image: python:3.9-slim-bookworm
+
+variables:
+  IMAGE_NAME: "eshkt/yaml-docker-hub"
+  IMAGE_TAG: "first-container"
+
 run_test:
-  image: python:3.9-slim-bookworm
   before_script:
     - apt-get update && apt-get install -y make
   stage: test
   script:
     - make test
-    - export PORT=5004
-    - make run
+build_image:
+  stage: docker:29.2.1-cli
+  before_script:
+    - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+  only:
+    - main
