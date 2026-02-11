@@ -63,7 +63,7 @@ deploy_to_ec2:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      ssh $EC2_USER@$EC2_HOST"
+      ssh $EC2_USER@$EC2_HOST << EOF
 
       #this is to install docker 
       if ! command -v docker &> /dev/null; then
@@ -82,4 +82,5 @@ deploy_to_ec2:
         sudo docker stop $APP_NAME || true
         sudo docker rm $APP_NAME || true
         sudo docker run -d --name $APP_NAME -p 80:5000 -p 443:5000 $IMAGE_NAME:$IMAGE_TAG
-        "
+        
+      EOF
