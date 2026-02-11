@@ -105,9 +105,6 @@ resource "aws_eip" "py_app_eip" {
     depends_on = [ aws_internet_gateway.app_gtw, aws_instance.py_app_ec2]
 }
 
-#----------------------------------PARCON_AWS-Deployment/Practice_Lab/main.tf Snippet-------------------------------
-
-
 #9 create a Instance
 resource "aws_instance" "py_app_ec2" {
     ami = "ami-0c1fe732b5494dc14"
