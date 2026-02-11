@@ -125,6 +125,11 @@ resource "aws_instance" "py_app_ec2" {
 
                 sudo usermod -a -G docker ec2-user
 
+                sudo dnf install -y python3-certbot-nginx
+                sudo systemctl start nginx
+                sudo systemctl enable nginx
+                
+
                 EOF
 
     tags = {

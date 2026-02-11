@@ -25,7 +25,9 @@ build_image:
     DOCKER_TLS_CERTDIR: "/certs"
 
   before_script:
+    - echo "Buidling docker for $DOCKER_USER"
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
@@ -51,7 +53,7 @@ deploy_to_ec2:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      ssh $EC2_USER@$EC2_HOST "
+      ssh $EC2_USER@$EC2_HOST"
 
       #this is to install docker 
       if ! command -v docker &> /dev/null; then
@@ -69,5 +71,5 @@ deploy_to_ec2:
         sudo docker pull $IMAGE_NAME:$IMAGE_TAG
         sudo docker stop $APP_NAME || true
         sudo docker rm $APP_NAME || true
-        sudo docker run -d --name $APP_NAME -p 80:5000 $IMAGE_NAME:$IMAGE_TAG
+        sudo docker run -d --name $APP_NAME -p 80:5000 -p 443:5000 $IMAGE_NAME:$IMAGE_TAG
         "
