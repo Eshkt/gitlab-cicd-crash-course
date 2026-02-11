@@ -89,3 +89,48 @@ resource "aws_security_group" "py_app_sg" {
     }
   
 }
+
+#7 network interface
+resource "aws_network_interface" "py_app_nw_int" {
+    subnet_id = aws_subnet.py_app_sn.id
+    private_ips = ["192.168.1.24/24"]
+    security_groups = [aws_security_group.py_app_sg.id] 
+}
+
+#8 creating an elastic IP and associate it with the network interface
+resource "aws_eip" "py_app_eip" {
+    network_interface = aws_network_interface.py_app_nw_int.id
+    domain = "vpc"
+    depends_on = [ aws_internet_gateway.app_gtw, aws_instance.py_app_ec2]
+}
+
+#----------------------------------PARCON_AWS-Deployment/Practice_Lab/main.tf Snippet-------------------------------
+
+
+#9 create a Instance
+resource "aws_instance" "py_app_ec2" {
+    ami = "ami-0c1fe732b5494dc14"
+    instance_type = "t3.micro"
+    availability_zone = us-east-1b
+    key_name = "python-app-key"
+
+    network_interface {
+      network_interface_id = aws_network_interface.py_app_nw_int.id
+      device_index = 0
+    }
+
+    user_data = <<-EOF
+                sudo dnf update -y
+                sudo dnf install -y docker
+                sudo systemctl start docker
+                sudo systemctl enable docker
+
+                sudo usermod -a -G docker ec2-user
+
+                EOF
+
+    tags = {
+        Name = "python-app-instance"
+    }
+  
+}
