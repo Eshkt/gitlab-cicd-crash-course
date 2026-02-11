@@ -19,9 +19,9 @@ run_test:
     - make test
 build_image:
   stage: dockerize
-  image: docker:29.2.1
+  image: docker:27.5.1
   services:
-    - docker:29.2.1-dind
+    - docker:27.5.1-dind
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
 
