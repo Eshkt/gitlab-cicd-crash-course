@@ -56,10 +56,10 @@ deploy_to_ec2:
       ssh $EC2_USER@$EC2_HOST "
 
       #this is to install docker 
-      if ! command -v docker &> dev/null; then
+      if ! command -v docker &> /dev/null; then
           echo "Docker not found, now installing..."
           sudo dnf update -y
-          sudp dnf install -y docker 
+          sudo dnf install -y docker 
           sudo systemctl start docker
           sudo systemctl enable docker
           sudo user mod -a -G docker $EC2_USER
