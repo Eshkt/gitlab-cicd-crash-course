@@ -9,6 +9,8 @@ variables:
   IMAGE_NAME: "eshkt/yaml-docker-hub"
   IMAGE_TAG: "first-container"
   APP_NAME: "yaml-docker-hub"
+  EC2_HOST: "13.216.232.127"  # Hardcode the IP address here TEMPORARY
+  EC2_USER: "ec2-user"        # Hardcode the username here TEMPORARY
 
 run_test:
   before_script:
