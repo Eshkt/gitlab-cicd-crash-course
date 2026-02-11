@@ -64,3 +64,4 @@ deploy_to_ec2:
       sudo docker stop $APP_NAME || true
       sudo docker rm $APP_NAME || true
       sudo docker run -d --name $APP_NAME -p 80:5004 $IMAGE_NAME:$IMAGE_TAG
+      EOF
