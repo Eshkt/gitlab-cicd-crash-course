@@ -1,3 +1,4 @@
+
 provider "aws" {
     region = "us-east-1"
     #secret keys were configure in aws configure using AWS CLI
@@ -128,7 +129,7 @@ resource "aws_instance" "py_app_ec2" {
                 sudo dnf install -y python3-certbot-nginx
                 sudo systemctl start nginx
                 sudo systemctl enable nginx
-                
+
 
                 EOF
 
