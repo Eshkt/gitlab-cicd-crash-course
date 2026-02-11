@@ -23,7 +23,7 @@ resource "aws_route_table" "app_rt_tbl" {
     vpc_id = aws_vpc.app_vpc.id
 
     route {
-        cidr_block = "192.168.0.0/16"
+        cidr_block = "0.0.0.0/0"
         gateway_id = aws_internet_gateway.app_gtw.id
     }
     route {
@@ -94,7 +94,7 @@ resource "aws_security_group" "py_app_sg" {
 #7 network interface
 resource "aws_network_interface" "py_app_nw_int" {
     subnet_id = aws_subnet.py_app_sn.id
-    private_ips = ["192.168.1.24/24"]
+    private_ips = ["192.168.1.24"] #just IP no cidr block
     security_groups = [aws_security_group.py_app_sg.id] 
 }
 
