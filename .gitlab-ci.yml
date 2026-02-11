@@ -9,7 +9,6 @@ variables:
   IMAGE_NAME: "eshkt/yaml-docker-hub"
   IMAGE_TAG: "first-container"
   APP_NAME: "yaml-docker-hub"
-  EC2_USER: "ec2-user"
 
 run_test:
   before_script:
@@ -38,6 +37,10 @@ deploy_to_ec2:
   image: alpine:latest
   before_script:
     - apk add --no-cache openssh-client
+    # --- DEBUG SECTION ---
+    - echo "Checking variables..."
+    - if [ -z "$EC2_HOST" ]; then echo "ERROR - EC2_HOST is empty in GitLab Settings"; exit 1; fi
+    #-------------
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
