@@ -45,23 +45,23 @@ deploy_to_ec2:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-     ssh $EC2_USER@$EC2_HOST << 'EOF'
+      ssh $EC2_USER@$EC2_HOST "
 
-     #this is to install docker 
-     if ! command -v docker &> dev/null; then
-        echo "Docker not found, now installing..."
-        sudo dnf update -y
-        sudp dnf install -y docker 
-        sudo systemctl start docker
-        sudo systemctl enable docker
-        sudo user mod -a -G docker $EC2_USER
-        echo "Docker installed successfully."
-      fi
+      #this is to install docker 
+      if ! command -v docker &> dev/null; then
+          echo "Docker not found, now installing..."
+          sudo dnf update -y
+          sudp dnf install -y docker 
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo user mod -a -G docker $EC2_USER
+          echo "Docker installed successfully."
+        fi
 
-      #2 Re-login to apply docker group permissions 
-      sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
-      sudo docker pull $IMAGE_NAME:$IMAGE_TAG
-      sudo docker stop $APP_NAME || true
-      sudo docker rm $APP_NAME || true
-      sudo docker run -d --name $APP_NAME -p 80:5004 $IMAGE_NAME:$IMAGE_TAG
-      EOF
+        #2 Re-login to apply docker group permissions 
+        sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
+        sudo docker pull $IMAGE_NAME:$IMAGE_TAG
+        sudo docker stop $APP_NAME || true
+        sudo docker rm $APP_NAME || true
+        sudo docker run -d --name $APP_NAME -p 80:5004 $IMAGE_NAME:$IMAGE_TAG
+        "
