@@ -109,7 +109,7 @@ deploy_to_ec2:
                   proxy_set_header X-Real-IP \$remote_addr;
               }
           }
-          echo "$CONF" | sudo tee /etc/nginx/conf.d/default.conf
+          echo "$CONF" | sudo tee /etc/nginx/conf.d/default.conf > /dev/null
         fi
 
           systemctl restart nginx
