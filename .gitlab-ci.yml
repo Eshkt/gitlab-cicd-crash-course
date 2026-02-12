@@ -81,7 +81,7 @@ deploy_to_ec2:
         sudo systemctl start nginx
         sudo systemctl enable nginx
 
-        #Create a selfsigned certificate for HTTPS
+        #Create a directory and selfsigned certificate for HTTPS
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
           openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
           -keyout /etc/nginx/ssl/server.key \
@@ -90,11 +90,7 @@ deploy_to_ec2:
           fi
         
         #create nginx config file
-        if [ ! -f /etc/nginx/conf.d/default.conf ]; then
-          sudo mkdir -p /etc/nginx/ssl
-          sudo chown $EC2_USER:$EC2_USER /etc/nginx/ssl
-          cat <<EOL > /etc/nginx/conf.d/python_app.conf
-          server {
+          CONF ="server {
               listen 80;
               listen 443 ssl;
               listen [::]:80;
@@ -108,9 +104,8 @@ deploy_to_ec2:
                   proxy_set_header Host \$host;
                   proxy_set_header X-Real-IP \$remote_addr;
               }
-          }
+          }"
           echo "$CONF" | sudo tee /etc/nginx/conf.d/default.conf > /dev/null
-        fi
 
           systemctl restart nginx
 
