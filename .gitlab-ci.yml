@@ -76,11 +76,42 @@ deploy_to_ec2:
           echo "Docker installed successfully."
         fi 
 
+        #Create a selfsigned certificate for HTTPS
+        if [ ! -f cert_pem ]; then
+          openssl req -x509 -node -days 365 -newkey rsa:2048 \
+          -keyout /etc/ngix/ssl/server.key \
+          -out /etc/ngix/ssl/server.crt \
+          -subj "C/=US /ST=state /L=city /O=organization /CN=$EC2_HOST"
+          fi
+        
+        #create nginx config file
+        if [ ! -f /etc/nginx/conf.d/default.conf ]; then
+          sudo mkdir -p /etc/nginx/ssl
+          sudo chown $EC2_USER:$EC2_USER /etc/nginx/ssl
+          cat <<EOL > /etc/nginx/conf.d/python_app.conf
+          server {
+              listen 80;
+              listen 443 ssl;
+              listen [::]:80;
+              listen [::]:443 ssl;
+              server_name $EC2_HOST;
+              ssl_certificate /etc/nginx/ssl/server.crt;
+              ssl_certificate_key /etc/nginx/ssl/server.key;
+
+              location / {
+                  proxy_pass https://localhost:5000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+              }
+          }
+
+          systemctl restart nginx
+
         #2 Re-login to apply docker group permissions 
         sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
         sudo docker pull $IMAGE_NAME:$IMAGE_TAG
         sudo docker stop $APP_NAME || true
         sudo docker rm $APP_NAME || true
-        sudo docker run -d --name $APP_NAME -p 80:5000 -p 443:5000 $IMAGE_NAME:$IMAGE_TAG
+        sudo docker run -d --name $APP_NAME -p 5000:5000 -p 443:5000 $IMAGE_NAME:$IMAGE_TAG
         
       EOF
