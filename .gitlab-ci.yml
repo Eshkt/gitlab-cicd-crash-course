@@ -55,7 +55,7 @@ deploy_to_ec2:
     # --- DEBUG SECTION ---
     - echo "Checking variables..."
     - if [ -z "$EC2_HOST" ]; then echo "ERROR - EC2_HOST is empty in GitLab Settings"; exit 1; fi
-    #-------------
+    #--------------------
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
@@ -82,10 +82,10 @@ deploy_to_ec2:
         sudo systemctl enable nginx
 
         #Create a selfsigned certificate for HTTPS
-        if [ ! -f cert_pem ]; then
+        if [ ! -f /etc/nginx/ssl/server.crt ]; then
           openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
-          -keyout /etc/ngix/ssl/server.key \
-          -out /etc/ngix/ssl/server.crt \
+          -keyout /etc/nginx/ssl/server.key \
+          -out /etc/nginx/ssl/server.crt \
           -subj "C/=US /ST=state /L=city /O=organization /CN=$EC2_HOST"
           fi
         
