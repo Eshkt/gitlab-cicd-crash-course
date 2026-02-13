@@ -88,7 +88,7 @@ deploy_to_ec2:
           sudo openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
           -keyout /etc/nginx/ssl/server.key \
           -out /etc/nginx/ssl/server.crt \
-          -subj "/C=US /ST=state /L=city /O=organization /CN=$EC2_HOST"
+          -subj "/C=US/ST=state/L=city/O=organization/CN=$EC2_HOST"
           fi
 
         #Nginx server block configuration
