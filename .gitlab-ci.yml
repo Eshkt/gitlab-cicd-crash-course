@@ -91,11 +91,11 @@ deploy_to_ec2:
           -subj "/C=US/ST=state/L=city/O=organization/CN=$EC2_HOST"
           fi
 
-        #Nginx server block configuration
-        sudo sed -i 's/listen 80 default_server;/listen 80;/' /etc/nginx/conf.d/default.conf || true
-        sudo rm -f /etc/nginx/conf.d/default.conf
-
-
+        #using sed and tee to create nginx config file and remove default config
+        sudo sed -i 's/default_server//g' /etc/nginx/conf.d/nginx.conf || true
+        sudo rm -f /etc/nginx/conf.d/*.conf
+        sudo tee /etc/nginx/conf.d/default.conf > /dev/null <<EOL
+        
         #create nginx config file
           CONF="server {
               listen 80;
