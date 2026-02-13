@@ -63,7 +63,7 @@ deploy_to_ec2:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
 
       #this is to install docker 
       if ! command -v docker &> /dev/null; then
