@@ -72,7 +72,7 @@ deploy_to_ec2:
           sudo dnf install -y docker 
           sudo systemctl start docker
           sudo systemctl enable docker
-          sudo user mod -a -G docker $EC2_USER
+          sudo usermod -aG docker $EC2_USER
           echo "Docker installed successfully."
         fi 
 
@@ -86,11 +86,11 @@ deploy_to_ec2:
           openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
           -keyout /etc/nginx/ssl/server.key \
           -out /etc/nginx/ssl/server.crt \
-          -subj "C/=US /ST=state /L=city /O=organization /CN=$EC2_HOST"
+          -subj "/C=US /ST=state /L=city /O=organization /CN=$EC2_HOST"
           fi
         
         #create nginx config file
-          CONF = "server {
+          CONF="server {
               listen 80;
               listen 443 ssl;
               listen [::]:80;
@@ -100,7 +100,7 @@ deploy_to_ec2:
               ssl_certificate_key /etc/nginx/ssl/server.key;
 
               location / {
-                  proxy_pass https://127.0.0.1:5000;
+                  proxy_pass https://localhost:5000;
                   proxy_set_header Host \$host;
                   proxy_set_header X-Real-IP \$remote_addr;
               }
@@ -116,4 +116,4 @@ deploy_to_ec2:
         sudo docker rm $APP_NAME || true
         sudo docker run -d --name $APP_NAME -p 5000:5000 $IMAGE_NAME:$IMAGE_TAG
         
-      'EOF'
+      EOF
