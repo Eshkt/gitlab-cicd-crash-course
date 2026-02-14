@@ -89,7 +89,7 @@ deploy_to_ec2:
   script:
     - |
       # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
         EC2_HOST="$EC2_HOST" \
         DOCKER_USER="$DOCKER_USER" \ 
         DOCKER_PASS="$DOCKER_PASS"  \ 
