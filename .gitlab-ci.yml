@@ -90,12 +90,7 @@ deploy_to_ec2:
     - |
       # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-        EC2_HOST="$EC2_HOST" \
-        DOCKER_USER="$DOCKER_USER" \
-        DOCKER_PASS="$DOCKER_PASS" \
-        IMAGE_NAME="$IMAGE_NAME" \
-        IMAGE_TAG="$IMAGE_TAG" \
-        APP_NAME="$APP_NAME" \
+        "EC2_HOST='$EC2_HOST' DOCKER_USER='$DOCKER_USER' DOCKER_PASS='$DOCKER_PASS' IMAGE_NAME='$IMAGE_NAME' IMAGE_TAG='$IMAGE_TAG' APP_NAME='$APP_NAME'" \
         'bash -s' << 'EOF'
 
 
@@ -149,7 +144,7 @@ deploy_to_ec2:
         sudo nginx -t && sudo systemctl restart nginx
 
         # 6. Docker Deploy
-        sudo docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+        sudo docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" 
         sudo docker pull "$IMAGE_NAME:$IMAGE_TAG"
         sudo docker stop "$APP_NAME" || true
         sudo docker rm "$APP_NAME" || true
