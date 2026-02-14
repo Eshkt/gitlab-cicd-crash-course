@@ -88,63 +88,49 @@ deploy_to_ec2:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST
-        "EC2_HOST='$EC2_HOST' DOCKER_USER='$DOCKER_USER' DOCKER_PASS='$DOCKER_PASS' IMAGE_NAME='$IMAGE_NAME' IMAGE_TAG='$IMAGE_TAG' APP_NAME='$APP_NAME'" \
-        'bash -s' << 'EOF'
-
-
-        # 1. Install & Start Nginx/Docker
-        #sudo dnf install -y openssl nginx
-        #sudo systemctl start nginx
-        #sudo systemctl enable nginx
-
-        if ! command -v docker &> /dev/null; then
-          sudo dnf update -y
-          sudo dnf install -y docker 
-          sudo systemctl start docker
-          sudo systemctl enable docker
-          sudo usermod -aG docker $USER
-        fi 
-
-        # 2. Setup SSL Certificate
+      # We use EOF WITHOUT quotes so GitLab replaces the $VARIABLES.
+      # We use \\$ for Nginx variables so they remain literal for the EC2.
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+        # 1. Setup Nginx and SSL
+        sudo dnf install -y openssl nginx
+        sudo systemctl start nginx
         sudo mkdir -p /etc/nginx/ssl
+
+        # 2. Generate Cert (GitLab fills in $EC2_HOST here)
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
           sudo openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
-          -keyout /etc/nginx/ssl/server.key \
-          -out /etc/nginx/ssl/server.crt \
-          -subj "/C=US/ST=State/L=City/O=Organization/CN=$EC2_HOST"
+            -keyout /etc/nginx/ssl/server.key \
+            -out /etc/nginx/ssl/server.crt \
+            -subj "/C=US/ST=State/L=City/O=Org/CN=$EC2_HOST"
         fi
 
-        # 3. Clean Nginx Defaults
-        # Strip default_server from the main nginx.conf
+        # 3. Aggressive Cleanup
         sudo sed -i '/server {/,/}/d' /etc/nginx/nginx.conf
         sudo rm -f /etc/nginx/conf.d/*.conf
 
-        # 4. Define the APP_CONF variable correctly
-        # Note: proxy_pass uses http, not https
+        # 4. Write the App Config
+        # Note the double backslash \\$ for Nginx internal variables
         APP_CONF="server {
             listen 80 default_server;
             listen 443 ssl default_server;
             server_name _;
-
             ssl_certificate /etc/nginx/ssl/server.crt;
             ssl_certificate_key /etc/nginx/ssl/server.key;
 
             location / {
                 proxy_pass http://127.0.0.1:5000;
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-Proto \$scheme;
+                proxy_set_header Host \\\$host;
+                proxy_set_header X-Real-IP \\\$remote_addr;
+                proxy_set_header X-Forwarded-Proto \\\$scheme;
             }
         }"
+        echo "\$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
 
-        # 5. Write the file and restart Nginx
-        echo "$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
+        # 5. Restart Nginx
         sudo nginx -t && sudo systemctl restart nginx
 
         # 6. Docker Deploy
-        sudo docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" 
+        echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
         sudo docker pull "$IMAGE_NAME:$IMAGE_TAG"
         sudo docker stop "$APP_NAME" || true
         sudo docker rm "$APP_NAME" || true
