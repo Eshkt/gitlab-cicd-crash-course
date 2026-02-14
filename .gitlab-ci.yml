@@ -80,23 +80,32 @@ inspect_ec2:
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client 
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      # We use EOF WITHOUT quotes so GitLab replaces the $VARIABLES.
-      # We use \\$ for Nginx variables so they remain literal for the EC2.
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-        # 1. Setup Nginx and SSL
+        # 1. Install Nginx & OpenSSL
         sudo dnf install -y openssl nginx
-        sudo systemctl start nginx
-        sudo mkdir -p /etc/nginx/ssl
+        sudo systemctl enable nginx
 
-        # 2. Generate Cert (GitLab fills in $EC2_HOST here)
+        # 2. Reset nginx.conf to a clean, minimal state
+        # This removes all the 'Welcome' blocks and just includes your custom config
+        sudo tee /etc/nginx/nginx.conf > /dev/null << 'CANONICAL'
+      user nginx;
+      worker_processes auto;
+      error_log /var/log/nginx/error.log notice;
+      pid /run/nginx.pid;
+      events { worker_connections 1024; }
+      http {
+          include /etc/nginx/mime.types;
+          default_type application/octet-stream;
+          sendfile on;
+          keepalive_timeout 65;
+          include /etc/nginx/conf.d/*.conf;
+      }
+      CANONICAL
+
+        # 3. Setup SSL Cert
+        sudo mkdir -p /etc/nginx/ssl
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
           sudo openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
             -keyout /etc/nginx/ssl/server.key \
@@ -104,12 +113,9 @@ deploy_to_ec2:
             -subj "/C=US/ST=State/L=City/O=Org/CN=$EC2_HOST"
         fi
 
-        # 3. Aggressive Cleanup
-        sudo sed -i '/server {/,/}/d' /etc/nginx/nginx.conf
+        # 4. Write your App Config to conf.d
+        # Note the triple backslash for escaping $ variables inside EOF
         sudo rm -f /etc/nginx/conf.d/*.conf
-
-        # 4. Write the App Config
-        # Note the double backslash \\$ for Nginx internal variables
         APP_CONF="server {
             listen 80 default_server;
             listen 443 ssl default_server;
@@ -126,7 +132,7 @@ deploy_to_ec2:
         }"
         echo "\$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
 
-        # 5. Restart Nginx
+        # 5. Test and Restart Nginx
         sudo nginx -t && sudo systemctl restart nginx
 
         # 6. Docker Deploy
