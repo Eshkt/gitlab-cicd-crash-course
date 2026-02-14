@@ -2,6 +2,7 @@ stages:
   - test
   - dockerize
   - deploy_test
+  - inspect_ec2
   - deploy
 
 image: python:3.9-slim-bookworm
@@ -47,20 +48,30 @@ test_deploy:
     - echo "The value of HOST is [${EC2_HOST}]"
 
 
+inspect_ec2: 
+  stage: inspect_ec2
+  image: alpine:latest
+  script:
+    - apk add --no-cache openssh-client 
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+    - |
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
+        echo "---- Checking if config file exists ----"
+        ls -l /etc/nginx/conf.d/default.conf || echo "Config file not found"
+        echo "---- Printing the content of the config file ----"
+        sudo cat /etc/nginx/conf.d/default.conf || echo "Cannot read config file"
+        echo "---- Checking if nginx.conf is included in the conf.d----"
+        grep "include /etc/nginx/conf.d" /etc/nginx/nginx.conf
+        echo "---- checking for port 443 conflicts----"
+        sudo netstat -tulpn | grep LISTEN
+      EOF
+
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-    # --- DEBUG SECTION ---
-    - echo "Checking variables..."
-    - if [ -z "$EC2_HOST" ]; then echo "ERROR - EC2_HOST is empty in GitLab Settings"; exit 1; fi
-    #--------------------
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
