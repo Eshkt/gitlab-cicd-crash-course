@@ -90,10 +90,11 @@ deploy_to_ec2:
     - |
       # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-        # 1. Install & Start Nginx/Docker
-        #sudo dnf install -y openssl nginx
-        #sudo systemctl start nginx
-        #sudo systemctl enable nginx
+        # 1. Install & Start Nginx/docker
+        sudo dnf update -y
+        sudo dnf install -y openssl nginx
+        sudo systemctl start nginx
+        sudo systemctl enable nginx
 
         if ! command -v docker &> /dev/null; then
           sudo dnf update -y
@@ -103,8 +104,20 @@ deploy_to_ec2:
           sudo usermod -aG docker $USER
         fi 
 
+        #Adding Canonical to ssl Certificate
+        sudo tee /etc/ssl/openssl.conf > /dev/null <<CANONICAL
+      user nginx;
+      worker_processes auto;
+      events { worker_connections 1024; }
+      http {
+          include /etc/nginx/mime.types;
+          default_type application/octet-stream;
+          sendfile on;
+          include /etc/nginx/conf.d/*.conf;
+          }
+        CANONICAL
+
         # 2. Setup SSL Certificate
-        sudo mkdir -p /etc/nginx/ssl
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
           sudo openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
           -keyout /etc/nginx/ssl/server.key \
@@ -129,9 +142,9 @@ deploy_to_ec2:
 
             location / {
                 proxy_pass http://127.0.0.1:5000;
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-Proto \$scheme;
+                proxy_set_header Host \\\$host;
+                proxy_set_header X-Real-IP \\\$remote_addr;
+                proxy_set_header X-Forwarded-Proto \\\$scheme;
             }
         }"
 
