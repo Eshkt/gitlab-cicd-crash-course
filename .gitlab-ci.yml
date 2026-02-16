@@ -104,14 +104,17 @@ deploy_to_ec2:
         fi 
 
        echo "#Adding Canonical to ssl Certificate"
-        sudo tee /etc/nginx/nginx.conf > /dev/null <<'CANONICAL'
+        sudo tee /etc/nginx/nginx.conf > /dev/null << 'CANONICAL'
       user nginx;
       worker_processes auto;
+      error_log /var/log/nginx/error.log notice;
+      pid /var/run/nginx.pid;
       events { worker_connections 1024; }
       http {
           include /etc/nginx/mime.types;
           default_type application/octet-stream;
           sendfile on;
+          kepepalive_timeout 65;
           include /etc/nginx/conf.d/*.conf;
           }
         CANONICAL
@@ -124,12 +127,7 @@ deploy_to_ec2:
           -subj "/C=US/ST=State/L=City/O=Organization/CN=$EC2_HOST"
         fi
 
-        echo "# 3. Clean Nginx Defaults"
-        # Strip default_server from the main nginx.conf
-        sudo sed -i 's/default_server//g' /etc/nginx/nginx.conf
-        sudo rm -f /etc/nginx/conf.d/*.conf
-
-        echo "# 4. Define the APP_CONF variable correctly"
+        echo "# 3. Define the APP_CONF variable correctly"
         # Note: proxy_pass uses http, not https
         APP_CONF="server {
             listen 80 default_server;
@@ -147,11 +145,11 @@ deploy_to_ec2:
             }
         }"
 
-        echo "# 5. Write the file and restart Nginx"
+        echo "# 4. Write the file and restart Nginx"
         echo "$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
         sudo nginx -t && sudo systemctl restart nginx
 
-        echo "# 6. Docker Deploy"
+        echo "# 5. Docker Deploy"
         sudo docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
         sudo docker pull "$IMAGE_NAME:$IMAGE_TAG"
         sudo docker stop "$APP_NAME" || true
