@@ -2,9 +2,8 @@ stages:
   - test
   - dockerize
   - deploy_test
-  - deploy
   - inspect_ec2
-
+  - deploy
 image: python:3.9-slim-bookworm
 
 variables:
@@ -88,9 +87,9 @@ deploy_to_ec2:
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
+      echo  # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
       ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-        # 1. Install & Start Nginx/docker
+       echo # 1. Install & Start Nginx/docker
         sudo dnf update -y
         sudo dnf install -y openssl nginx
         sudo systemctl start nginx
@@ -104,7 +103,7 @@ deploy_to_ec2:
           sudo usermod -aG docker $USER
         fi 
 
-        #Adding Canonical to ssl Certificate
+       echo #Adding Canonical to ssl Certificate
         sudo tee /etc/ssl/openssl.conf > /dev/null <<CANONICAL
       user nginx;
       worker_processes auto;
@@ -117,7 +116,7 @@ deploy_to_ec2:
           }
         CANONICAL
 
-        # 2. Setup SSL Certificate
+        echo # 2. Setup SSL Certificate
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
           sudo openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
           -keyout /etc/nginx/ssl/server.key \
@@ -125,12 +124,12 @@ deploy_to_ec2:
           -subj "/C=US/ST=State/L=City/O=Organization/CN=$EC2_HOST"
         fi
 
-        # 3. Clean Nginx Defaults
+        echo # 3. Clean Nginx Defaults
         # Strip default_server from the main nginx.conf
         sudo sed -i 's/default_server//g' /etc/nginx/nginx.conf
         sudo rm -f /etc/nginx/conf.d/*.conf
 
-        # 4. Define the APP_CONF variable correctly
+        echo # 4. Define the APP_CONF variable correctly
         # Note: proxy_pass uses http, not https
         APP_CONF="server {
             listen 80 default_server;
@@ -148,11 +147,11 @@ deploy_to_ec2:
             }
         }"
 
-        # 5. Write the file and restart Nginx
+        echo # 5. Write the file and restart Nginx
         echo "$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
         sudo nginx -t && sudo systemctl restart nginx
 
-        # 6. Docker Deploy
+        echo # 6. Docker Deploy
         sudo docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
         sudo docker pull "$IMAGE_NAME:$IMAGE_TAG"
         sudo docker stop "$APP_NAME" || true
