@@ -80,63 +80,69 @@ inspect_ec2:
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client 
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
   script:
     - |
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-        # 1. Install Nginx & OpenSSL
-        sudo dnf install -y openssl nginx
-        sudo systemctl enable nginx
+      # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
 
-        # 2. Reset nginx.conf to a clean, minimal state
-        # This removes all the 'Welcome' blocks and just includes your custom config
-        sudo tee /etc/nginx/nginx.conf > /dev/null << 'CANONICAL'
-      user nginx;
-      worker_processes auto;
-      error_log /var/log/nginx/error.log notice;
-      pid /run/nginx.pid;
-      events { worker_connections 1024; }
-      http {
-          include /etc/nginx/mime.types;
-          default_type application/octet-stream;
-          sendfile on;
-          keepalive_timeout 65;
-          include /etc/nginx/conf.d/*.conf;
-      }
-      CANONICAL
 
-        # 3. Setup SSL Cert
+        # 1. Install & Start Nginx/Docker
+        #sudo dnf install -y openssl nginx
+        #sudo systemctl start nginx
+        #sudo systemctl enable nginx
+
+        if ! command -v docker &> /dev/null; then
+          sudo dnf update -y
+          sudo dnf install -y docker 
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo usermod -aG docker $USER
+        fi 
+
+        # 2. Setup SSL Certificate
         sudo mkdir -p /etc/nginx/ssl
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
           sudo openssl req -x509 -noenc -days 365 -newkey rsa:2048 \
-            -keyout /etc/nginx/ssl/server.key \
-            -out /etc/nginx/ssl/server.crt \
-            -subj "/C=US/ST=State/L=City/O=Org/CN=$EC2_HOST"
+          -keyout /etc/nginx/ssl/server.key \
+          -out /etc/nginx/ssl/server.crt \
+          -subj "/C=US/ST=State/L=City/O=Organization/CN=$EC2_HOST"
         fi
 
-        # 4. Write your App Config to conf.d
-        # Note the triple backslash for escaping $ variables inside EOF
+        # 3. Clean Nginx Defaults
+        # Strip default_server from the main nginx.conf
+        sudo sed -i 's/default_server//g' /etc/nginx/nginx.conf
         sudo rm -f /etc/nginx/conf.d/*.conf
+
+        # 4. Define the APP_CONF variable correctly
+        # Note: proxy_pass uses http, not https
         APP_CONF="server {
             listen 80 default_server;
             listen 443 ssl default_server;
             server_name _;
+
             ssl_certificate /etc/nginx/ssl/server.crt;
             ssl_certificate_key /etc/nginx/ssl/server.key;
 
             location / {
                 proxy_pass http://127.0.0.1:5000;
-                proxy_set_header Host \\\$host;
-                proxy_set_header X-Real-IP \\\$remote_addr;
-                proxy_set_header X-Forwarded-Proto \\\$scheme;
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_set_header X-Forwarded-Proto \$scheme;
             }
         }"
-        echo "\$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
 
-        # 5. Test and Restart Nginx
+        # 5. Write the file and restart Nginx
+        echo "$APP_CONF" | sudo tee /etc/nginx/conf.d/python_app.conf > /dev/null
         sudo nginx -t && sudo systemctl restart nginx
 
         # 6. Docker Deploy
-        echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+        sudo docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
         sudo docker pull "$IMAGE_NAME:$IMAGE_TAG"
         sudo docker stop "$APP_NAME" || true
         sudo docker rm "$APP_NAME" || true
