@@ -58,7 +58,17 @@ deploy_to_ec2:
   script:
     - |
       echo  "# Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally"
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST \
+      # defining variables on the remote server
+        EC2_HOST="$EC2_HOST" \
+        IMAGE_NAME="$IMAGE_NAME" \
+        IMAGE_TAG="$IMAGE_TAG" \
+        APP_NAME="$APP_NAME" \
+        DOCKER_PASS="$DOCKER_PASS" \
+        DOCKER_USER="$DOCKER_USER" \
+        'bash -s' << 'EOF'
+
+
        echo # 1. Install & Start Nginx/docker
         sudo dnf update -y
         sudo dnf install -y openssl nginx
