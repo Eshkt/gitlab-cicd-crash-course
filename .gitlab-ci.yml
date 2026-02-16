@@ -89,9 +89,7 @@ deploy_to_ec2:
   script:
     - |
       # Using 'EOF' with quotes to prevent GitLab from expanding \$ variables locally
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
-
-
+      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
         # 1. Install & Start Nginx/Docker
         #sudo dnf install -y openssl nginx
         #sudo systemctl start nginx
