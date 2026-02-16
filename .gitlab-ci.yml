@@ -104,7 +104,7 @@ deploy_to_ec2:
         fi 
 
        echo #Adding Canonical to ssl Certificate
-        sudo tee /etc/ssl/openssl.conf > /dev/null <<CANONICAL
+        sudo tee /etc/ssl/openssl.conf > /dev/null <<'CANONICAL'
       user nginx;
       worker_processes auto;
       events { worker_connections 1024; }
