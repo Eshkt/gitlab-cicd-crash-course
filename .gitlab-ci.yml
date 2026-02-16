@@ -74,7 +74,7 @@ deploy_to_ec2:
         fi 
 
        echo "#Adding Canonical to ssl Certificate"
-        sudo tee /etc/nginx/nginx.conf > /dev/null << CANONICAL
+        sudo tee /etc/nginx/nginx.conf > /dev/null << 'CANONICAL'
       user nginx;
       worker_processes auto;
       error_log /var/log/nginx/error.log notice;
@@ -84,10 +84,10 @@ deploy_to_ec2:
           include /etc/nginx/mime.types;
           default_type application/octet-stream;
           sendfile on;
-          kepepalive_timeout 65;
+          keepalive_timeout 65;
           include /etc/nginx/conf.d/*.conf;
           }
-        CANONICAL
+      CANONICAL
 
         echo "# 2. Setup SSL Certificate"
         if [ ! -f /etc/nginx/ssl/server.crt ]; then
