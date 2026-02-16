@@ -2,8 +2,8 @@ stages:
   - test
   - dockerize
   - deploy_test
-  - inspect_ec2
   - deploy
+  - inspect_ec2
 
 image: python:3.9-slim-bookworm
 
