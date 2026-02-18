@@ -1,0 +1,45 @@
+Automated Cloud Infrastructure & CI/CD Pipeline
+An end-to-end DevOps project featuring Infrastructure as Code (IaC), Containerization, and Automated SSL Deployment.
+
+🚀 Project Overview
+This project demonstrates a production-grade deployment workflow for web applications. While the application is a Python-based microservice, the core focus is the DevOps lifecycle: automating the provisioning of AWS resources, containerizing the application, and establishing a secure, "zero-touch" deployment pipeline.
+
+🛠️ Tech Stack
+Infrastructure: Terraform (AWS EC2, Security Groups)
+
+Pipeline: GitLab CI/CD
+
+Containerization: Docker & Docker Hub
+
+Web Server: Nginx (Reverse Proxy & SSL Termination)
+
+Security: OpenSSL (Self-signed certificates), SSH Key Management
+
+Environment: Amazon Linux 2023 (AL2023)
+
+🏗️ Architecture & Features
+Infrastructure as Code: Uses Terraform to ensure the server environment is reproducible and version-controlled.
+
+Multi-Stage Pipeline: Includes automated testing, Docker image building, and remote deployment stages.
+
+Hardened Nginx Configuration: Features a custom "Canonical Reset" logic to prevent configuration drift and ensure a valid server state.
+
+SSL Termination: Automates the generation and configuration of SSL certificates to secure traffic on Port 443.
+
+Docker Orchestration: Implements automated pull-and-restart logic to ensure zero downtime during updates.
+
+🔧 Engineering Challenges & Solutions
+1. The "1-Byte Config" & Variable Injection
+Challenge: Passing GitLab CI variables into a remote SSH session often resulted in empty strings or shell expansion errors, leading to broken Nginx configurations.
+Solution: Implemented a "Hybrid Injection" method using quoted Heredocs (<< 'EOF'). By passing variables directly through the SSH command string and protecting the inner script from local expansion, I ensured that critical Nginx variables like $host were preserved while project variables like $IMAGE_NAME were correctly populated.
+
+2. Nginx Configuration Resilience
+Challenge: Standard sed edits on nginx.conf frequently caused syntax errors (e.g., location directive not allowed here).
+Solution: Designed a "Canonical Reset" script that overwrites the master Nginx configuration with a known-good template during every deployment. This guarantees a clean state and eliminates manual troubleshooting on the server.
+
+📖 How to Use
+Provision: Run terraform apply to create the AWS environment.
+
+Configure: Add the EC2_HOST, SSH_PRIVATE_KEY, and DOCKER_PASS to GitLab CI/CD variables.
+
+Deploy: Push code to the main branch to trigger the automated build and deployment.
