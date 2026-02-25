@@ -44,8 +44,8 @@ test_deploy:
     - echo "Checking visibility..."
     - if [ -z "$SSH_PRIVATE_KEY" ]; then echo "KEY is MISSING"; else echo "KEY is FOUND"; fi
     - if [ -z "$EC2_HOST" ]; then echo "HOST is MISSING"; else echo "HOST is FOUND"; fi
-    - curl ifconfig.co/ip || echo "Failed to fetch public IP"
-    #check if the public IP is == to the allowed IP in the security group
+     #check if the public IP is == to the allowed IP in the security group
+    - curl -s ifconfig.co/ip 
     - if [ "$(curl -s ifconfig.co/ip)" = "112.198.36.8" ]; then echo "Public IP matches allowed IP"; else echo "Public IP does NOT match allowed IP"; fi
     - echo "The value of HOST is [${EC2_HOST}]"
 
