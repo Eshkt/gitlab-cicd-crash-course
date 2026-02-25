@@ -56,10 +56,9 @@ test_deploy:
 
 aws_allow:
   stage: aws_sg_allow
-  image: amazon/aws-cli/2.33.14
+  image: amazon/aws-cli/2.15.22
   before_script:
-    - sudo apt-get update
-    - sudo apt-get install -y curl
+    - yum install -y curl
   script:
     - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
