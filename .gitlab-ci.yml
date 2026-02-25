@@ -56,7 +56,7 @@ test_deploy:
 
 aws_allow:
   stage: aws_sg_allow
-  image: amazon/aws-cli/latest
+  image: amazon/aws-cli:latest
   before_script:
     - yum install -y curl
   script:
@@ -156,6 +156,7 @@ deploy_to_ec2:
         sudo docker rm "$APP_NAME" || true
         sudo docker run -d --name "$APP_NAME" -p 127.0.0.1:5000:5000 "$IMAGE_NAME:$IMAGE_TAG"
       EOF
+  after_script:
     - aws ec2 revoke-security-group-ingress --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || echo "Failed to remove ingress rule or rule does not exist"
 
 inspect_ec2: 
