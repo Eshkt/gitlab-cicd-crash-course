@@ -62,13 +62,14 @@ aws_allow:
   script:
     - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
+    - echo "Whitelising the public IP $PUBLIC_IP for SSH access to EC2 instance"
     - > 
       aws ec2 authorize-security-group-ingress 
       --group-id $SG_ID 
       --protocol tcp 
       --port 22 --cidr $PUBLIC_IP/32 
       || echo "Ingress rule already exists or failed to add"
-    - echo $PUBLIC_IP
+
 
 
 deploy_to_ec2:
