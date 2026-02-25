@@ -56,8 +56,9 @@ test_deploy:
 
 aws_allow:
   stage: aws_sg_allow
-  image: amazon/aws-cli:latest
-  entrypoint: [""]
+  image: 
+    name: amazon/aws-cli:latest
+    entrypoint: [""]
   before_script:
     - yum install -y curl
   script:
