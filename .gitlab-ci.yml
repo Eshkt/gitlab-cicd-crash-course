@@ -60,10 +60,12 @@ aws_allow:
   image: 
     name: amazon/aws-cli:latest
     entrypoint: [""]
-    before_script:
+  
+  before_script:
     - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESS_KEY_ID is FOUND"; fi
     - if [ -z $AWS_SECRET_ACCESS_KEY ]; then echo "AWS_SECRET_ACCESS_KEY is MISSING"; else echo "AWS_SECRET_ACCESS_KEY is FOUND"; fi
     - if [ -z $SG_ID ]; then echo "SG_ID is MISSING"; else echo "SG_ID is FOUND"; fi
+
   script:
     - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
