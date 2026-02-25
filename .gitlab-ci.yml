@@ -84,8 +84,6 @@ deploy_to_ec2:
   image: alpine:latest
   before_script:
     - apk add --no-cache openssh-client 
-    - sudo apt-get update
-    - apk add --no-cache aws-cli/2.33.14
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
