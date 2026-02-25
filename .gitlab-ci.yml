@@ -41,7 +41,9 @@ build_image:
 test_deploy:
   stage: deploy_test
   before_script:
-    - apt get install curl -y
+    #install curl to check the public IP
+    - apk add --no-cache curl
+    
   script:
     - echo "Checking visibility..."
     - if [ -z "$SSH_PRIVATE_KEY" ]; then echo "KEY is MISSING"; else echo "KEY is FOUND"; fi
