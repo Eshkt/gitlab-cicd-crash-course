@@ -68,6 +68,7 @@ aws_allow:
       --protocol tcp 
       --port 22 --cidr $PUBLIC_IP/32 
       || echo "Ingress rule already exists or failed to add"
+    - echo $PUBLIC_IP
 
 
 deploy_to_ec2:
