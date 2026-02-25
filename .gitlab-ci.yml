@@ -2,6 +2,7 @@ stages:
   - test
   - dockerize
   - deploy_test
+  - aws_sg_allow
   - deploy
   - inspect_ec2
 image: python:3.9-slim-bookworm
@@ -53,11 +54,25 @@ test_deploy:
     - if [ "$(curl -s ifconfig.co/ip)" = "112.198.36.8" ]; then echo "Public IP matches allowed IP"; else echo "Public IP does NOT match allowed IP"; fi
     - echo "The value of HOST is [${EC2_HOST}]"
 
+aws_allow:
+  stage: aws_sg_allow
+  image: amazon/aws-cli/2.33.14
+  before_script:
+    - sudo apt-get update
+    - sudo apt-get install -y curl
+  script:
+    - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
+    - echo "Public IP is $PUBLIC_IP"
+    - aws ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || echo "Ingress rule already exists or failed to add"
+
+
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
   before_script:
     - apk add --no-cache openssh-client 
+    - sudo apt-get update
+    - apk add --no-cache aws-cli/2.33.14
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -143,6 +158,9 @@ deploy_to_ec2:
         sudo docker run -d --name "$APP_NAME" -p 127.0.0.1:5000:5000 "$IMAGE_NAME:$IMAGE_TAG"
       EOF
 
+  post_script:
+    - aws ec2 revoke-security-group-ingress --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || echo "Failed to remove ingress rule or rule does not exist"
+
 inspect_ec2: 
   stage: inspect_ec2
   image: alpine:latest
@@ -171,3 +189,4 @@ inspect_ec2:
         sudo netstat -tulpn | grep LISTEN
 
       EOF
+
