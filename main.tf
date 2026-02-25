@@ -183,3 +183,4 @@ resource "aws_iam_instance_profile" "ec2_instance_profile"{
 #     assume_role_policy = jsonencode({
 #     })
 # }
+
