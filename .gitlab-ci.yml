@@ -5,6 +5,7 @@ stages:
   - aws_sg_allow
   - deploy
   - inspect_ec2
+  - aws_sg_revoke
 
 image: python:3.9-slim-bookworm
 
@@ -70,12 +71,13 @@ aws_allow:
     - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
     - echo "Whitelising the public IP $PUBLIC_IP for SSH access to EC2 instance"
-    - > 
+    - > #specifiying the region in aws ec2 authroize sg script
       aws ec2 authorize-security-group-ingress 
       --group-id $SG_ID 
-      --protocol tcp 
-      --port 22 --cidr $PUBLIC_IP/32 
-      || echo "Ingress rule already exists or failed to add"
+      --protocol tcp --port 22 
+      --cidr $PUBLIC_IP/32 
+      --region us-east-1 
+      || echo "Failed to add ingress rule or rule already exists"
 
 deploy_to_ec2:
   stage: deploy
@@ -197,6 +199,16 @@ inspect_ec2:
         sudo netstat -tulpn | grep LISTEN
 
       EOF
-after_script:
-    - aws ec2 revoke-security-group-ingress --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || echo "Failed to remove ingress rule or rule does not exist"
 
+aws_revoke:
+  stage: aws_sg_revoke
+  image:
+    name: amazon/aws-cli:latest
+    entrypoint: [""]
+    script:
+      - aws ec2 revoke-security-group-ingress \
+        --group-id $SG_ID \
+        --protocol tcp --port 22 \
+        --cidr $PUBLIC_IP/32 \
+        --region us-east-1 \
+        || echo "Failed to remove ingress rule or rule does not exist"
