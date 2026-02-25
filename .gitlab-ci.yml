@@ -88,6 +88,7 @@ deploy_to_ec2:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+    - 
   script:
     - |
       # Using 'EOF' with quotes to prevent GitLab from expanding $ variables locally
