@@ -44,6 +44,7 @@ test_deploy:
     - echo "Checking visibility..."
     - if [ -z "$SSH_PRIVATE_KEY" ]; then echo "KEY is MISSING"; else echo "KEY is FOUND"; fi
     - if [ -z "$EC2_HOST" ]; then echo "HOST is MISSING"; else echo "HOST is FOUND"; fi
+    - curl ifconfig.me || echo "Unable to access external network"
     - echo "The value of HOST is [${EC2_HOST}]"
 
 deploy_to_ec2:
