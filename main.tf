@@ -58,11 +58,11 @@ resource "aws_security_group" "py_app_sg" {
     description = "This is to allo traffic for the python app"
     vpc_id = aws_vpc.app_vpc.id
     ingress {
-        description = "To allow ssh traffic"
         from_port = 22
         to_port = 22
         protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        description = "Allow SSH traffic from Globe Tower/Office public IP"
+        cidr_blocks = ["112.198.36.8/32"]
     }
     ingress{
         description = "To allow HTTP traffic"
@@ -120,6 +120,7 @@ resource "aws_instance" "py_app_ec2" {
     instance_type = "t3.micro"
     availability_zone = "us-east-1b"
     key_name = "python-app-key"
+    iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
 
     network_interface {
       network_interface_id = aws_network_interface.py_app_nw_int.id
@@ -144,5 +145,41 @@ resource "aws_instance" "py_app_ec2" {
     tags = {
         Name = "python-app-instance"
     }
-  
 }
+
+    #Creating a IAM Role for EC2 Monitoring
+resource "aws_iam_role" "ec2_role"{
+    name = "ec2-monintoring-role"
+
+    assume_role_policy = jsonencode({
+        Version: "2012-10-17"
+        Statement: [ 
+            {
+                Effect: "Allow"
+                Action: "sts:AssumeRole"
+                Principal: {
+                    Service: "ec2.amazonaws.com"
+                    }
+                }
+            ]
+        })
+    }
+
+#Attaching a policy to the EC2 monitoring role
+resource "aws_iam_role_policy_attachment" "cloudwatch_policy" {
+    role = aws_iam_role.ec2_role.name
+    policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+#creating a instance profile and attach the role to it in instance resource block
+resource "aws_iam_instance_profile" "ec2_instance_profile"{
+    name = "ec2-instance-profile"
+    role = aws_iam_role.ec2_role.name
+}
+
+#     #Creating an IAM Roles for an ECR access
+# resource "aws_iam_role" "ecr_access_role" {
+#     name = "ecr-access-role"
+#     assume_role_policy = jsonencode({
+#     })
+# }
