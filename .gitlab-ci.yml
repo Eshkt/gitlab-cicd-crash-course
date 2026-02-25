@@ -69,7 +69,7 @@ aws_allow:
     - echo "Public IP is $PUBLIC_IP"
     - echo "Whitelising the public IP $PUBLIC_IP for SSH access to EC2 instance"
     - > 
-    #specifiying the region in aws ec2 authroize sg script
+      #specifiying the region in aws ec2 authroize sg script
       aws ec2 authorize-security-group-ingress 
       --group-id $SG_ID 
       --protocol tcp --port 22 
