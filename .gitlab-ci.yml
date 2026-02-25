@@ -5,6 +5,7 @@ stages:
   - aws_sg_allow
   - deploy
   - inspect_ec2
+
 image: python:3.9-slim-bookworm
 
 variables:
@@ -59,6 +60,10 @@ aws_allow:
   image: 
     name: amazon/aws-cli:latest
     entrypoint: [""]
+    before_script:
+    - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESS_KEY_ID is FOUND"; fi
+    - if [ -z $AWS_SECRET_ACCESS_KEY ]; then echo "AWS_SECRET_ACCESS_KEY is MISSING"; else echo "AWS_SECRET_ACCESS_KEY is FOUND"; fi
+    - if [ -z $SG_ID ]; then echo "SG_ID is MISSING"; else echo "SG_ID is FOUND"; fi
   script:
     - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
@@ -69,8 +74,6 @@ aws_allow:
       --protocol tcp 
       --port 22 --cidr $PUBLIC_IP/32 
       || echo "Ingress rule already exists or failed to add"
-
-
 
 deploy_to_ec2:
   stage: deploy
@@ -163,9 +166,7 @@ deploy_to_ec2:
         sudo docker rm "$APP_NAME" || true
         sudo docker run -d --name "$APP_NAME" -p 127.0.0.1:5000:5000 "$IMAGE_NAME:$IMAGE_TAG"
       EOF
-  after_script:
-    - aws ec2 revoke-security-group-ingress --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || echo "Failed to remove ingress rule or rule does not exist"
-
+  
 inspect_ec2: 
   stage: inspect_ec2
   image: alpine:latest
@@ -194,4 +195,6 @@ inspect_ec2:
         sudo netstat -tulpn | grep LISTEN
 
       EOF
+after_script:
+    - aws ec2 revoke-security-group-ingress --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || echo "Failed to remove ingress rule or rule does not exist"
 
