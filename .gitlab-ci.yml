@@ -86,9 +86,11 @@ deploy_to_ec2:
     - apk add --no-cache openssh-client 
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - sleep 500 # Wait for EC2 instance to be ready (adjust as needed)
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "Scanning for SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
+    - sleep 5 # Wait for EC2 instance to be ready (adjust as needed)
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+    - ssh ec2-user@$EC2_HOST "echo 'SSH connection successful!'"
   script:
     - |
       # Using 'EOF' with quotes to prevent GitLab from expanding $ variables locally
