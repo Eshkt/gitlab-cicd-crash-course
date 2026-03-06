@@ -84,6 +84,7 @@ deploy_to_ec2:
     - echo "Scanning SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
     - apk add --no-cache openssh-client python3 py3-pip 
     - pip install awscli --break-system-packages
+    - curl -s ifconfig.co/ip
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
