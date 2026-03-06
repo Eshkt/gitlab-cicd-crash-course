@@ -92,11 +92,10 @@ deploy_to_ec2:
     #authorizing IP thru VPC ACLs
     - >
       aws ec2 authorize-security-group-ingress \
-      --group-id "$SG_ID" \
-      --protocol tcp --port 22 \
-      --cidr "${PUBLIC_IP}/32" \
+      --group-id "$SG_ID" 
+      --protocol tcp --port 22 
+      --cidr "${PUBLIC_IP}/32" 
       --region us-east-1 
-      echo "Whitelisting complete. Attempting SSH connection to $EC2_HOST..."
     
     #SSH parameters and connection setup
     - eval $(ssh-agent -s)
