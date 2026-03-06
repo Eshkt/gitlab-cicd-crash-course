@@ -76,6 +76,7 @@ aws_allow:
       --cidr $PUBLIC_IP/32 
       --region us-east-1 
       || echo "Failed to add ingress rule or rule already exists"
+      --debug #this will help us why aws is ignoring the ssh request
 
 deploy_to_ec2:
   stage: deploy
@@ -88,6 +89,8 @@ deploy_to_ec2:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - echo "Scanning for SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
+    #this will print the allowed IPs for port 22, dictated by the VPC ACLs
+    - aws ec2 describe-security-groups --group-ids $SG_ID --region us-east-1 --query "SecurityGroups[0].InPermissions[?FromPort==\`22\`].IpRanges[].CidrIp" --output text
     - sleep 5 # Wait for EC2 instance to be ready (adjust as needed)
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
     - ssh ec2-user@$EC2_HOST "echo 'SSH connection successful!'"
