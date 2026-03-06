@@ -81,11 +81,10 @@ deploy_to_ec2:
   stage: deploy
   image: alpine:latest
   before_script:
-    #installing aws cli in alpine image
-    - apk add --no-cache awscli
     - if [ -z "$EC2_HOST" ]; then echo "EC2_HOST is MISSING"; else echo "EC2_HOST is FOUND"; fi
     - echo "Scanning SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
-    - apk add --no-cache openssh-client 
+    - apk add --no-cache openssh-client python3 py3-pip 
+    - pip install awscli --break-system-packages
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
