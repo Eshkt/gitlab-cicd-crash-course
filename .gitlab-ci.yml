@@ -90,7 +90,7 @@ deploy_to_ec2:
     - echo "Whitelisting the public IP $PUBLIC_IP for SSH access to EC2"
     #authorizing IP thru VPC ACLs
     - >
-      aws ec2 authorize-security-group-ingress \
+      aws ec2 authorize-security-group-ingress 
       --group-id "$SG_ID" 
       --protocol tcp --port 22 
       --cidr "${PUBLIC_IP}/32" 
