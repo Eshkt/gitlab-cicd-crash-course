@@ -88,7 +88,7 @@ deploy_to_ec2:
 # printing public IP and ssetting up the dynamic Security Group rules for SSH access to EC2 instance
     - PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
-    - echo "Whitelisting the public IP $PUBLIC_IP for SSH access to EC2
+    - echo "Whitelisting the public IP $PUBLIC_IP for SSH access to EC2"
     #authorizing IP thru VPC ACLs
     - >
       aws ec2 authorize-security-group-ingress \
