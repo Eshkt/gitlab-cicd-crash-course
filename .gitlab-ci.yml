@@ -83,8 +83,7 @@ deploy_to_ec2:
   # Installing dependencies and setting up SSH connection to EC2 instance
     - if [ -z "$EC2_HOST" ]; then echo "EC2_HOST is MISSING"; else echo "EC2_HOST is FOUND"; fi
     - echo "Scanning SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
-    - apk add --no-cache openssh-client python3 py3-pip curl
-    - pip install awscli
+    - apk add --no-cache openssh-client python3 py3-pip curl awscli
 # printing public IP and ssetting up the dynamic Security Group rules for SSH access to EC2 instance
     - PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
