@@ -55,37 +55,50 @@ test_deploy:
     - if [ "$(curl -s ifconfig.co/ip)" = "112.198.36.8" ]; then echo "Public IP matches allowed IP"; else echo "Public IP does NOT match allowed IP"; fi
     - echo "The value of HOST is [${EC2_HOST}]"
 
-aws_allow:
-  stage: aws_sg_allow
-  image: 
-    name: amazon/aws-cli:latest
-    entrypoint: [""]
-  before_script:
-    - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESS_KEY_ID is FOUND"; fi
-    - if [ -z $AWS_SECRET_ACCESS_KEY ]; then echo "AWS_SECRET_ACCESS_KEY is MISSING"; else echo "AWS_SECRET_ACCESS_KEY is FOUND"; fi
-    - if [ -z $SG_ID ]; then echo "SG_ID is MISSING"; else echo "SG_ID is FOUND"; fi
-  script:
-    - PUBLIC_IP=$(curl -s ifconfig.co/ip)
-    - echo "Public IP is $PUBLIC_IP"
-    - echo "Whitelising the public IP $PUBLIC_IP for SSH access to EC2 instance"
-          #specifiying the region in aws ec2 authroize sg script
-    - > 
-      aws ec2 authorize-security-group-ingress 
-      --group-id "$SG_ID" 
-      --protocol tcp --port 22 
-      --cidr "${PUBLIC_IP}/32"
-      --region us-east-1 
+# aws_allow: "THIS IS REMOVED DUE TO DIFFERENT IP OF THE MACHINES"
+#   stage: aws_sg_allow
+#   image: 
+#     name: amazon/aws-cli:latest
+#     entrypoint: [""]
+#   before_script:
+#     - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESS_KEY_ID is FOUND"; fi
+#     - if [ -z $AWS_SECRET_ACCESS_KEY ]; then echo "AWS_SECRET_ACCESS_KEY is MISSING"; else echo "AWS_SECRET_ACCESS_KEY is FOUND"; fi
+#     - if [ -z $SG_ID ]; then echo "SG_ID is MISSING"; else echo "SG_ID is FOUND"; fi
+#   script:
+#     - PUBLIC_IP=$(curl -s ifconfig.co/ip)
+#     - echo "Public IP is $PUBLIC_IP"
+#     - echo "Whitelising the public IP $PUBLIC_IP for SSH access to EC2 instance"
+#           #specifiying the region in aws ec2 authroize sg script
+#     - > 
+#       aws ec2 authorize-security-group-ingress 
+#       --group-id "$SG_ID" 
+#       --protocol tcp --port 22 
+#       --cidr "${PUBLIC_IP}/32"
+#       --region us-east-1 
 
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
   before_script:
+  # Installing dependencies and setting up SSH connection to EC2 instance
     - if [ -z "$EC2_HOST" ]; then echo "EC2_HOST is MISSING"; else echo "EC2_HOST is FOUND"; fi
     - echo "Scanning SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
     - apk add --no-cache openssh-client python3 py3-pip curl
     - pip install awscli --break-system-packages
-    #printing the ip of this machine
-    - echo "Public IP is $(curl -s ifconfig.co/ip)"
+# printing public IP and ssetting up the dynamic Security Group rules for SSH access to EC2 instance
+    - PUBLIC_IP=$(curl -s ifconfig.co/ip)
+    - echo "Public IP is $PUBLIC_IP"
+    - echo "Whitelisting the public IP $PUBLIC_IP for SSH access to EC2
+    #authorizing IP thru VPC ACLs
+    - >
+      aws ec2 authorize-security-group-ingress \
+      --group-id "$SG_ID" \
+      --protocol tcp --port 22 \
+      --cidr "${PUBLIC_IP}/32" \
+      --region us-east-1 
+      echo "Whitelisting complete. Attempting SSH connection to $EC2_HOST..."
+    
+    #SSH parameters and connection setup
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
