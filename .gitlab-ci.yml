@@ -65,17 +65,16 @@ aws_allow:
     - if [ -z $AWS_SECRET_ACCESS_KEY ]; then echo "AWS_SECRET_ACCESS_KEY is MISSING"; else echo "AWS_SECRET_ACCESS_KEY is FOUND"; fi
     - if [ -z $SG_ID ]; then echo "SG_ID is MISSING"; else echo "SG_ID is FOUND"; fi
   script:
-    - export curl PUBLIC_IP=$(curl -s ifconfig.co/ip)
+    - PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
     - echo "Whitelising the public IP $PUBLIC_IP for SSH access to EC2 instance"
     - > 
       #specifiying the region in aws ec2 authroize sg script
       aws ec2 authorize-security-group-ingress 
-      --group-id $SG_ID 
+      --group-id "$SG_ID" 
       --protocol tcp --port 22 
-      --cidr $PUBLIC_IP/32 
+      --cidr "${PUBLIC_IP}/32"
       --region us-east-1 
-      || echo "Failed to add ingress rule or rule already exists"
 
 deploy_to_ec2:
   stage: deploy
