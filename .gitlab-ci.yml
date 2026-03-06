@@ -76,13 +76,13 @@ aws_allow:
       --cidr $PUBLIC_IP/32 
       --region us-east-1 
       || echo "Failed to add ingress rule or rule already exists"
-      --debug #this will help us why aws is ignoring the ssh request
 
 deploy_to_ec2:
   stage: deploy
   image: alpine:latest
   before_script:
-    - pip install awscli --break-system-packages #installing aws cli on alpine
+    #installing aws cli in alpine image
+    - apk add --no-cache awscli
     - if [ -z "$EC2_HOST" ]; then echo "EC2_HOST is MISSING"; else echo "EC2_HOST is FOUND"; fi
     - echo "Scanning SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
     - apk add --no-cache openssh-client 
