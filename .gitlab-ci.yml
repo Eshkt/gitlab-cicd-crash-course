@@ -238,9 +238,9 @@ aws_revoke:
     entrypoint: [""]
   script:
     - >
-      aws ec2 revoke-security-group-ingress \
-      --group-id $SG_ID \
-      --protocol tcp --port 22 \
-      --cidr $PUBLIC_IP/32 \
-      --region us-east-1 \
+      aws ec2 revoke-security-group-ingress 
+      --group-id "$SG_ID" 
+      --protocol tcp --port 22 
+      --cidr "$PUBLIC_IP/32" 
+      --region us-east-1 
       || echo "Failed to remove ingress rule or rule does not exist"
