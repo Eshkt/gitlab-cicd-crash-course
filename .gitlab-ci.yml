@@ -236,6 +236,11 @@ aws_revoke:
   image:
     name: amazon/aws-cli:latest
     entrypoint: [""]
+    #revoking all the ACL rules for port 22 to ensure security after deployment
+  before_script:
+    - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESSKEY_ID is FOUND"; fi
+    - if [ -z $AWS_SECRET_ACCESS_KEY]; then echo "AWS secret key is missing"; else echo "AWS secret key is found"; fi
+    - if [ -z $SG_ID] then echo "SG_ID is missing"; else echo "SG_ID is found"; fi  
   script:
     - >
       aws ec2 revoke-security-group-ingress 
