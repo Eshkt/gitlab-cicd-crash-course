@@ -244,9 +244,9 @@ aws_revoke:
     #authorizing the aws image IP for revoking the ACL rules.
     - PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
-    - echo "Revoking SSH access for all IPs except home IP $PUBLIC_IP"
+    - echo "authorizing SSH access for runnner image IP"
     - >
-      awss ec2 authorize-security-group-ingress
+      aws ec2 authorize-security-group-ingress
       --group-id "$SG_ID"
       --protocol tcp --port 22
       --cidr "${PUBLIC_IP}/32"
@@ -254,18 +254,19 @@ aws_revoke:
   script:
     - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
     - >
-     RMV_IP=$(aws ec2 describe-security-groups
+     IMG_IP=$(aws ec2 describe-security-groups
       --group-ids "$SG_ID"
       --region us-east-1
-      --query "SecurityGroups[0].IpPermissions[?FromPort==\'22\'].IpRanges[].CidrIP" --output text)
+      --query "SecurityGroups[0].IpPermissions[?FromPort==\'22\'].IpRanges[?CidrIP!='112.198.36.8/32'].CidrIP" 
+      --output text)
       echo "Current ACL rules for port 22: $SG_IPS"
     
     #Looping ACL revocation for existing IP
     - |
       if [ -z "$RMV_IP" || "$RMV_IP" = "None" ]; then
-        echo "No IPs to revoke for port 22"
+        echo "No IPs to revoke, ACL rules for port 22 is clean"
       else 
-        for ip in $RMV_IP; do
+        for ip in $IMG_IP; do
           echo "Revoking SSH access for exsiting IP: $ip"
           aws ec2 revoke-security-group-ingress \
           --group-id "$SG_ID" \
