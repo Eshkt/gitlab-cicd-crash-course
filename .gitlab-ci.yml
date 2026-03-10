@@ -254,6 +254,7 @@ aws_revoke:
       
   script:
     - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
+    - export AWS_DEFAULT_REGION="us-east-1"
     - |
      IMG_IP=$(aws ec2 describe-security-groups
       --group-ids "$SG_ID" \
