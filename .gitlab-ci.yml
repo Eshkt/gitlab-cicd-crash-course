@@ -264,7 +264,7 @@ aws_revoke:
     
     #Looping ACL revocation for existing IP
     - |
-      if [ -z "$RMV_IP" || "$RMV_IP" = "None" ]; then
+      if [ -z "$IMG_IP" ] || [ "$IMG_IP" = "None" ]; then
         echo "No IPs to revoke, ACL rules for port 22 is clean"
       else 
         for ip in $IMG_IP; do
