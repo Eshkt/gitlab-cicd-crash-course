@@ -240,7 +240,7 @@ aws_revoke:
   before_script:
     - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESSKEY_ID is FOUND"; fi
     - if [ -z $AWS_SECRET_ACCESS_KEY]; then echo "AWS secret key is missing"; else echo "AWS secret key is found"; fi
-    - if [ -z $SG_ID] then echo "SG_ID is missing"; else echo "SG_ID is found"; fi  
+    - if [ -z $SG_ID]; then echo "SG_ID is missing"; else echo "SG_ID is found"; fi  
     #authorizing the aws image IP for revoking the ACL rules.
     - PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
@@ -270,7 +270,8 @@ aws_revoke:
           echo "Revoking SSH access for exsiting IP: $ip"
           aws ec2 revoke-security-group-ingress \
           --group-id "$SG_ID" \
-          --protocol tcp --port 22 \
+          --protocol tcp \
+          --port 22 \
           --cidr "$ip" \
           --region us-east-1 
        done 
