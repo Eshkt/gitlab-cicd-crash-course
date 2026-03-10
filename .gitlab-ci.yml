@@ -251,9 +251,10 @@ aws_revoke:
       --protocol tcp --port 22
       --cidr "${PUBLIC_IP}/32"
       --region us-east-1
+      
   script:
     - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
-    - >
+    - |
      IMG_IP=$(aws ec2 describe-security-groups
       --group-ids "$SG_ID"
       --region us-east-1
