@@ -241,11 +241,38 @@ aws_revoke:
     - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESSKEY_ID is FOUND"; fi
     - if [ -z $AWS_SECRET_ACCESS_KEY]; then echo "AWS secret key is missing"; else echo "AWS secret key is found"; fi
     - if [ -z $SG_ID] then echo "SG_ID is missing"; else echo "SG_ID is found"; fi  
-  script:
+    #authorizing the aws image IP for revoking the ACL rules.
+    - PUBLIC_IP=$(curl -s ifconfig.co/ip)
+    - echo "Public IP is $PUBLIC_IP"
+    - echo "Revoking SSH access for all IPs except home IP $PUBLIC_IP"
     - >
-      aws ec2 revoke-security-group-ingress 
-      --group-id "$SG_ID" 
-      --protocol tcp --port 22 
-      --cidr "$PUBLIC_IP/32" 
-      --region us-east-1 
-      || echo "Failed to remove ingress rule or rule does not exist"
+      awss ec2 authorize-security-group-ingress
+      --group-id "$SG_ID"
+      --protocol tcp --port 22
+      --cidr "${PUBLIC_IP}/32"
+      --region us-east-1
+  script:
+    - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
+    - >
+     RMV_IP=$(aws ec2 describe-security-groups
+      --group-ids "$SG_ID"
+      --region us-east-1
+      --query "SecurityGroups[0].IpPermissions[?FromPort==\'22\'].IpRanges[].CidrIP" --output text)
+      echo "Current ACL rules for port 22: $SG_IPS"
+    
+    #Looping ACL revocation for existing IP
+    - |
+      if [ -z "$RMV_IP" || "$RMV_IP" = "None" ]; then
+        echo "No IPs to revoke for port 22"
+      else 
+        for ip in $RMV_IP; do
+          echo "Revoking SSH access for exsiting IP: $ip"
+          aws ec2 revoke-security-group-ingress \
+          --group-id "$SG_ID" \
+          --protocol tcp --port 22 \
+          --cidr "$ip" \
+          --region us-east-1 
+       done 
+       echo "Revocation process completed"
+       fi 
+  when: always #to ensure that the revocation happens even if the previous steps fail, to maintain security
