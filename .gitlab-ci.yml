@@ -239,8 +239,8 @@ aws_revoke:
     #revoking all the ACL rules for port 22 to ensure security after deployment
   before_script:
     - if [ -z $AWS_ACCESS_KEY_ID ]; then echo "AWS_ACCESS_KEY_ID is MISSING"; else echo "AWS_ACCESSKEY_ID is FOUND"; fi
-    - if [ -z $AWS_SECRET_ACCESS_KEY]; then echo "AWS secret key is missing"; else echo "AWS secret key is found"; fi
-    - if [ -z $SG_ID]; then echo "SG_ID is missing"; else echo "SG_ID is found"; fi  
+    - if [ -z $AWS_SECRET_ACCESS_KEY ]; then echo "AWS secret key is missing"; else echo "AWS secret key is found"; fi
+    - if [ -z $SG_ID ]; then echo "SG_ID is missing"; else echo "SG_ID is found"; fi  
     #authorizing the aws image IP for revoking the ACL rules.
     - PUBLIC_IP=$(curl -s ifconfig.co/ip)
     - echo "Public IP is $PUBLIC_IP"
@@ -259,8 +259,7 @@ aws_revoke:
      IMG_IP=$(aws ec2 describe-security-groups
       --group-ids "$SG_ID" \
       --region us-east-1 \
-      --query "SecurityGroups[0].IpPermissions[?ToPort==\'22\'].IpRanges[?CidrIp!='112.198.36.8/32'].CidrIp" \
-      --output text) \
+      --query "SecurityGroups[0].IpPermissions[?ToPort==\'22\'].IpRanges[?CidrIp!='112.198.36.8/32'].CidrIp" --output text) \
       echo "Current ACL rules for port 22: $SG_IPS"
     
     #Looping ACL revocation for existing IP
@@ -274,7 +273,7 @@ aws_revoke:
           --group-id "$SG_ID" \
           --protocol tcp \
           --port 22 \
-          --cidr "$ip" \
+          --CidrIp "$ip" \
           --region us-east-1 
        done 
        echo "Revocation process completed"
