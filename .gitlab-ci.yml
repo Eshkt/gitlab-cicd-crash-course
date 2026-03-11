@@ -256,7 +256,7 @@ aws_revoke:
     - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
     - export AWS_DEFAULT_REGION="us-east-1"
     - IMG_IP=$(aws ec2 describe-security-groups --group-ids "$SG_ID" --query "SecurityGroups[0].IpPermissions[?ToPort==\`22\`].IpRanges[?CidrIp!='112.198.36.8/32'].CidrIp" --output text)
-    - echo "Raw output from AWS query for ACL rules on port 22 [{$IMG_IP}]"
+    - echo "Raw output from AWS query for ACL rules on port 22 is $IMG_IP"
 
     #Looping ACL revocation for existing IP
     - |
