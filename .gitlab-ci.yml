@@ -253,10 +253,10 @@ aws_revoke:
       --region us-east-1
       
   script:
-    - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
     - export AWS_DEFAULT_REGION="us-east-1"
-    - IMG_IP=$(aws ec2 describe-security-groups --group-ids "$SG_ID" --query "SecurityGroups[0].IpPermissions[?ToPort==\`22\`].IpRanges[?CidrIp!='112.198.36.8/32'].CidrIp" --output text)
-    - echo "Raw output from AWS query for ACL rules on port 22 is $IMG_IP"
+    - echo "Enumirating the current ACL rules for port 22" #enumerating ACL rules
+    - IMG_IP=$(aws ec2 describe-security-groups --group-ids "$SG_ID" --query 'SecurityGroups[0].IpPermissions[?ToPort==`22`].IpRanges[].CidrIp' --output text)
+    - 'echo "Raw output from AWS query for ACL rules on port 22 is: [${IMG_IP}]"'
 
     #Looping ACL revocation for existing IP
     - |
@@ -264,14 +264,19 @@ aws_revoke:
         echo "No IPs to revoke, ACL rules for port 22 is clean"
       else 
         for ip in $IMG_IP; do
-          echo "Revoking SSH access for exsiting IP: $ip"
-          aws ec2 revoke-security-group-ingress \
-          --group-id "$SG_ID" \
-          --protocol tcp \
-          --port 22 \
-          --CidrIp "$ip" \
-          --region us-east-1 
-       done 
-       echo "Revocation process completed"
-       fi 
-  when: always #to ensure that the revocation happens even if the previous steps fail, to maintain security
+          if [ "$ip" == "112.198.36.8/32" ]; then
+            echo "Skipping revocation for Home/Office IP: $ip"
+          else
+            echo "Revoking SSH access for exsiting IP: $ip"
+            aws ec2 revoke-security-group-ingress \
+            --group-id "$SG_ID" \
+            --protocol tcp \
+            --port 22 \
+            --CidrIp "$ip" \
+            --region us-east-1
+          fi
+            done
+        echo "Revocation process completed"
+      fi 
+  when: always 
+  #to ensure that the revocation happens even if the previous steps fail, to maintain security
