@@ -272,7 +272,7 @@ aws_revoke:
             --group-id "$SG_ID" \
             --protocol tcp \
             --port 22 \
-            --CidrIp "$ip" \
+            --cidr "$ip" \
             --region us-east-1
           fi
             done
