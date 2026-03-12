@@ -6,6 +6,7 @@ stages:
   - deploy
   - inspect_ec2
   - aws_sg_revoke
+  - verify
 
 image: python:3.9-slim-bookworm
 
@@ -280,3 +281,14 @@ aws_revoke:
       fi 
   when: always 
   #to ensure that the revocation happens even if the previous steps fail, to maintain security
+
+  verifying_deploy:
+  stage: verify
+  image: alpine :latest
+  before_script:
+    - apk add -no-cache openssh-client curl
+  script:
+  # starting health check for the EC2 Instance
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
