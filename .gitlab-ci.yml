@@ -299,7 +299,7 @@ health_check:
         else
           echo "EC2 instance is not responding yet. Retrying in 30 seconds..."
           sleep 30 
-          fi
-          done
-          echo "EC2 instace failed health check after multiple attempts. Please investigate the issue."
-          exit 1
+        fi
+      done
+      echo "EC2 instace failed health check after multiple attempts. Please investigate the issue."
+      exit 1
