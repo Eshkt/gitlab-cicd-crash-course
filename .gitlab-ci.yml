@@ -282,7 +282,7 @@ aws_revoke:
   when: always 
   #to ensure that the revocation happens even if the previous steps fail, to maintain security
 
-  verifying_deploy:
+health_check:
   stage: verify
   image: alpine :latest
   before_script:
