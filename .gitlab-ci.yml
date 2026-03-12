@@ -286,7 +286,7 @@ health_check:
   stage: verify
   image: alpine:latest
   before_script:
-    - apk add -no-cache openssh-client curl
+    - apk add --no-cache curl openssh-client curl
   script:
   # starting health check for the EC2 Instance
     - echo "Scanning for EC2 health using SSH connection..."
