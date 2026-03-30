@@ -104,7 +104,7 @@ deploy_to_ec2:
     - echo "Scanning for SSH host key for $EC2_HOST || Waiting for EC2 instance to be ready..."
     #this will print the allowed IPs for port 22, dictated by the VPC ACLs
     - aws ec2 describe-security-groups --group-ids $SG_ID --region us-east-1 --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\`].IpRanges[].CidrIp" --output text
-    - sleep 60 # Wait for EC2 instance to be ready (adjust as needed)
+    - sleep 30 # Wait for EC2 instance to be ready (adjust as needed)
     - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
     - ssh ec2-user@$EC2_HOST "echo 'SSH connection successful!'"
   script:
@@ -291,7 +291,7 @@ health_check:
   # starting health check for the EC2 Instance
     - echo "Scanning for EC2 health using SSH connection..."
     # attempting to curl EC2 instace 5 time with a 30 second delay...
-    - for i in {1...5}; do
+    - for i in {1..5}; do
         echo "Attempt $i':' Checking if EC2 instance is healthy..."
         if curl -s --connect-timeout 5 http://$EC2_HOST:80 | grep -q "200 OK" > /dev/null; then
           echo "EC2 instance is healthy and responding to HTTP results"
@@ -303,4 +303,3 @@ health_check:
       done
     - echo "EC2 Instance is not healhty, check and debug the instance manually"
     - exit 1
-    
