@@ -293,7 +293,8 @@ health_check:
     # attempting to curl EC2 instace 5 time with a 30 second delay...
     - for i in {1..5}; do
         echo "Attempt $i':' Checking if EC2 instance is healthy..."
-        if curl -s --connect-timeout 5 http://$EC2_HOST:80 | grep -q "200 OK" > /dev/null; then
+        STATUS=$(ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "curl -s -o /dev/null -w '%{http_code}' http://$EC2_HOST:80")
+        if [ "$STATUS" = "200" ]; then
           echo "EC2 instance is healthy and responding to HTTP results"
           exit 0
         else
