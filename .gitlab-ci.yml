@@ -36,7 +36,6 @@ build_image:
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
-  script:
     - echo "Docker User is $DOCKER_USER"
     - echo "EC2 Host is $EC2_HOST"
   only:
@@ -289,7 +288,6 @@ health_check:
     - apk add --no-cache curl openssh-client curl
   script:
   # starting health check for the EC2 Instance
-    - echo "Scanning for EC2 health using SSH connection..."
     # attempting to curl EC2 instace 5 time with a 30 second delay...
     - for i in {1..5}; do
         echo "Attempt $i':' Checking if EC2 instance is healthy..."
