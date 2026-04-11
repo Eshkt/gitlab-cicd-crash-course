@@ -283,13 +283,13 @@ aws_revoke:
 
 health_check:
   stage: verify
-  image: bash:alpine
+  image: alpine:latest
   before_script:
     - apk add --no-cache curl openssh-client curl
   script:
   # starting health check for the EC2 Instance
     # attempting to curl EC2 instace 5 time with a 30 second delay...
-    - for i in {1..5}; do
+    - for i in 1 2 3 4 5; do
         echo "Attempt $i':' Checking if EC2 instance is healthy..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST:80)        
           if [ "$STATUS" = "200" ]; then
