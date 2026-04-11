@@ -7,6 +7,7 @@ stages:
   - inspect_ec2
   - aws_sg_revoke
   - verify
+  - api_monitoring_check
 
 image: python:3.9-slim-bookworm
 
@@ -289,16 +290,40 @@ health_check:
   script:
   # starting health check for the EC2 Instance
     # attempting to curl EC2 instace 5 time with a 30 second delay...
-    - for i in 1 2 3 4 5; do
+    - |
+      for i in {1..5}; do
         echo "Attempt $i':' Checking if EC2 instance is healthy..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST:80)        
           if [ "$STATUS" = "200" ]; then
           echo "EC2 instance is healthy and responding to HTTP results"
           exit 0
         else
-          echo "EC2 instance is not responding yet. Retrying in 10 seconds..."
+          echo "Failed $i Status($STATUS). Retrying in 10 seconds..."
           sleep 10 
         fi
       done
-    - echo "EC2 Instance is not healhty, check and debug the instance manually"
+    - echo "EC2 Instance is not healthy, check and debug the instance manually"
     - exit 1
+
+api_monitoring_check:
+  stage: api_monitoring_check
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl openssh-client curl
+  script:
+    - echo "Starting API monitoring check for EC2 instance..."
+    # Simulating API monitoring by making a request to the EC2 instance's endpoint
+    - RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST:80)
+    - if [ "$RESPONSE" = "200" ]; then
+        echo "API is healthy and responding with status code 200"
+      else
+        echo "API is not healthy, received status code $RESPONSE"
+        exit 1
+      fi
+
+# api_monitoring_check:
+#   stage: api_monitoring_check
+#   image: alpine:latest
+#   before_script:
+#     - apk add --no-cache curl openssh-client curl jq 
+#     script: 
