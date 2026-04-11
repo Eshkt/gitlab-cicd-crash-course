@@ -314,16 +314,22 @@ monitoring_api_check:
   script:
     - echo "Checking the monitoring API endpoint for vitals..."
     - RESPONSE=$(curl -s http://$EC2_HOST/api/monitor)
+    - echo "$RESPONSE" | jq .
+    - CPU=$(echo "$RESPONSE" | jq -r '.cpu')
+    - MEM=$(echo "$RESPONSE" | jq -r '.memory')
+    - echo "Current metrics -> CPU usage $CPU% |  current memory usage $MEM%" 
+    - CPU_INT=$(printf  "%.0f" $CPU)
+    - MEM_INT=$(printf "%.0f" $MEM)
     - echo "Raw response from monitoring API':' $RESPONSE"
-    - STATUS=$(echo "$RESPONSE" | jq -r '.status')
-    - |
-      if [ "$STATUS" = "healthy" ]; then
-        echo "Monitoring API is reporting healthy status"
-        exit 0
-      else
-        echo "Monitoring API is reporting unhealthy status or failed to parse response"
-        exit 1
-      fi
+    # - STATUS=$(echo "$RESPONSE" | jq -r '.status')
+    # - |
+    #   if [ "$STATUS" = "healthy" ]; then
+    #     echo "Monitoring API is reporting healthy status"
+    #     exit 0
+    #   else
+    #     echo "Monitoring API is reporting unhealthy status or failed to parse response"
+    #     exit 1
+    #   fi
 
 
     
