@@ -7,7 +7,8 @@ stages:
   - inspect_ec2
   - aws_sg_revoke
   - verify
-  - api_monitoring_check
+  - vitals_check
+
 
 image: python:3.9-slim-bookworm
 
@@ -305,25 +306,24 @@ health_check:
     - echo "EC2 Instance is not healthy, check and debug the instance manually"
     - exit 1
 
-api_monitoring_check:
-  stage: api_monitoring_check
+monitoring_api_check:
+  stage: vitals_check
   image: alpine:latest
   before_script:
-    - apk add --no-cache curl openssh-client curl
+    - apk add jq --no-cache curl 
   script:
-    - echo "Starting API monitoring check for EC2 instance..."
-    # Simulating API monitoring by making a request to the EC2 instance's endpoint
-    - RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://$EC2_HOST:80)
-    - if [ "$RESPONSE" = "200" ]; then
-        echo "API is healthy and responding with status code 200"
+    - echo "Checking the monitoring API endpoint for vitals..."
+    - RESPONSE=$(curl -s http://$EC2_HOST/api/monitor)
+    - echo "Raw response from monitoring API':' $RESPONSE"
+    - STATUS=$(echo "$RESPONSE" | jq -r '.status')]
+    - |
+      if [ "$STATUS" = "healthy" ]; then
+        echo "Monitoring API is reporting healthy status"
+        exit 0
       else
-        echo "API is not healthy, received status code $RESPONSE"
+        echi "Monitoring API is reporting unhealthy status or failed to parse response"
         exit 1
       fi
 
-# api_monitoring_check:
-#   stage: api_monitoring_check
-#   image: alpine:latest
-#   before_script:
-#     - apk add --no-cache curl openssh-client curl jq 
-#     script: 
+      
+    
