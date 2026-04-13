@@ -316,7 +316,7 @@ monitoring_api_check:
     - RESPONSE=$(curl -s http://$EC2_HOST/api/monitor)
     - echo "$RESPONSE" | jq .
     - CPU=$(echo "$RESPONSE" | jq -r '.cpu')
-    - MEM=$(echo "$RESPONSE" | jq -r '.memory')
+    - MEM=$(echo "$RESPONSE" | jq -r '.mem')
     - echo "Current metrics -> CPU usage $CPU% |  current memory usage $MEM%" 
     - CPU_INT=$(printf  "%.0f" $CPU)
     - MEM_INT=$(printf "%.0f" $MEM)
