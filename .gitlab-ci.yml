@@ -332,6 +332,5 @@ monitoring_api_check:
         echo "Warning: High Memory usage detected! Memory: $MEM%"
        else
         echo "Resource usage are normal. CPU: $CPU%, Memory: $MEM%"
-        exit 1
       fi
     
