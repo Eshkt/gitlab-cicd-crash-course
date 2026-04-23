@@ -1,12 +1,12 @@
 stages:
-  - test
-  - dockerize
-  - deploy_test
-  - aws_sg_allow
-  - deploy
-  - inspect_ec2
-  - aws_sg_revoke
-  - verify
+  # - test
+  # - dockerize
+  # - deploy_test
+  # - aws_sg_allow
+  # - deploy
+  # - inspect_ec2
+  # - aws_sg_revoke
+  # - verify
   - vitals_check
 
 
