@@ -324,7 +324,6 @@ monitoring_api_check:
     - echo "Raw response from monitoring API':' $RESPONSE"
     - STATUS=$(echo "$RESPONSE" | jq -r '.status')
     - |
-     - |
       if [ "$CPU_INT" -gt 85 ] || [ "$MEM_INT" -gt 90 ]; then
         echo "ALERT: Resource usage exceeds safety thresholds!"
         echo "Details -> CPU: $CPU%, Memory: $MEM%"
