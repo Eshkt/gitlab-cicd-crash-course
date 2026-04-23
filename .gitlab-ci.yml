@@ -324,13 +324,14 @@ monitoring_api_check:
     - echo "Raw response from monitoring API':' $RESPONSE"
     - STATUS=$(echo "$RESPONSE" | jq -r '.status')
     - |
-      if [ "$STATUS" = "healthy" ]; then
-        echo "Monitoring API is reporting healthy status"
-        exit 0
-      else
-        echo "Monitoring API is reporting unhealthy status or failed to parse response"
+      if [ "$CPU_INT" -gt 80 ] && [ "$MEM_INT" -gt 90 ]; then
+        echo "Warning: High resource usage detected! CPU: $CPU%, $MEM%"
+      elif [ "$CPU_INT" -gt 80 ]; then
+        echo "Warning: High CPU usage detected! CPU: $CPU%"
+      elif [ "$MEM_INT" -gt 90 ]; then
+        echo "Warning: High Memory usage detected! Memory: $MEM%"
+       else
+        echo "Resource usage are normal. CPU: $CPU%, Memory: $MEM%"
         exit 1
-      fi
-
 
     
