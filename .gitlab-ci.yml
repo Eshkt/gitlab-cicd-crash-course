@@ -235,6 +235,7 @@ inspect_ec2:
 
 aws_revoke:
   stage: aws_sg_revoke
+  when: always
   image:
     name: amazon/aws-cli:latest
     entrypoint: [""]
@@ -321,15 +322,15 @@ monitoring_api_check:
     - CPU_INT=$(printf  "%.0f" $CPU)
     - MEM_INT=$(printf "%.0f" $MEM)
     - echo "Raw response from monitoring API':' $RESPONSE"
-    # - STATUS=$(echo "$RESPONSE" | jq -r '.status')
-    # - |
-    #   if [ "$STATUS" = "healthy" ]; then
-    #     echo "Monitoring API is reporting healthy status"
-    #     exit 0
-    #   else
-    #     echo "Monitoring API is reporting unhealthy status or failed to parse response"
-    #     exit 1
-    #   fi
+    - STATUS=$(echo "$RESPONSE" | jq -r '.status')
+    - |
+      if [ "$STATUS" = "healthy" ]; then
+        echo "Monitoring API is reporting healthy status"
+        exit 0
+      else
+        echo "Monitoring API is reporting unhealthy status or failed to parse response"
+        exit 1
+      fi
 
 
     
